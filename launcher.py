@@ -6,6 +6,9 @@ import os
 import subprocess
 import sys
 import tempfile
+import urllib.request
+import urllib.error
+import time
 from pathlib import Path
 APP_DIR_NAME = "MedtronicValidationTool"
 LATEST_URL = r"\\hcwda30449e\Validation-Tool\latest.json"
@@ -22,6 +25,34 @@ def _read_local_version(app_dir: Path) -> str:
         return ver_file.read_text(encoding="utf-8").strip()
     except Exception:
         return ""
+def _read_runtime(app_dir: Path) -> dict | None:
+    p = app_dir / "runtime.json"
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+def _http_get_json(url: str, timeout: float = 0.6) -> dict | None:
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as r:
+            return json.loads(r.read().decode("utf-8", errors="ignore"))
+    except Exception:
+        return None
+def _http_post(url: str, token: str, timeout: float = 0.8) -> bool:
+    try:
+        req = urllib.request.Request(url, method="POST", data=b"")
+        req.add_header("X-Validation-Token", token)
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            _ = r.read()
+        return True
+    except Exception:
+        return False
+def _open_browser(url: str) -> None:
+    try:
+        os.startfile(url)  # type: ignore[attr-defined]
+    except Exception:
+        pass
 def _write_local_version(app_dir: Path, version: str) -> None:
     ver_file = app_dir / "version.txt"
     app_dir.mkdir(parents=True, exist_ok=True)
@@ -110,6 +141,26 @@ def main() -> None:
     app_dir = _get_app_dir()
     exe_path = ensure_latest(app_dir)
     ensure_pbi_tools(app_dir)
+    info = _fetch_latest_info() or {}
+    latest_version = str(info.get("version", "")).strip()
+    rt = _read_runtime(app_dir)
+    if rt:
+        host = rt.get("host", "127.0.0.1")
+        port = int(rt.get("port", 8000))
+        token = str(rt.get("token", "")).strip()
+        running_url = f"http://{host}:{port}"
+        ping = _http_get_json(running_url + "/ping")
+        if ping and ping.get("ok") is True:
+            running_version = str(ping.get("version", "")).strip()
+            if latest_version and running_version == latest_version:
+                _open_browser(running_url)
+                sys.exit(0)
+            if token:
+                _http_post(running_url + "/shutdown", token=token)
+                for _ in range(10):
+                    time.sleep(0.2)
+                    if not _http_get_json(running_url + "/ping"):
+                        break
     if not exe_path.exists():
         import tkinter.messagebox as mbox
         mbox.showerror(

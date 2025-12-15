@@ -66,12 +66,12 @@
     </div>
     
   
-  <h2>Errors <span class="pill errpill">1</span></h2>
+  <h2>Errors <span class="pill errpill">4</span></h2>
   <div class="wrap">
     <table>
       <thead><tr><th>Date</th><th>Time</th><th>user</th><th>action</th><th>app_version</th><th>model</th><th>release</th><th>error</th></tr></thead>
       <tbody>
-        <tr><td><code>2025-12-15</code></td><td><code>10:43:49</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.4</code></td><td>gpt-41</td><td>initial</td><td><code>MedtronicGPT request failed after refresh (429): Too Many Requests (URL: https://api.gpt.medtronic.com/models/gpt-41) Response body: { &quot;statusCode&quot;: 429, &quot;message&quot;: &quot;Rate limit is exceeded. Try again in 1 seconds.&quot; }</code></td></tr>
+        <tr><td><code>2025-12-15</code></td><td><code>14:53:39</code></td><td>Chey Wade</td><td>chat</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>Chat JSON mode was enabled, but the model response was not valid draft JSON. Try again or disable the toggle.</td></tr><tr><td><code>2025-12-15</code></td><td><code>14:30:21</code></td><td>Chey Wade</td><td>chat</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>Chat JSON mode was enabled, but the model response was not valid draft JSON. Try again or disable the toggle.</td></tr><tr><td><code>2025-12-15</code></td><td><code>14:17:42</code></td><td>Chey Wade</td><td>chat</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>Chat JSON mode was enabled, but the model response was not valid draft JSON. Try again or disable the toggle.</td></tr><tr><td><code>2025-12-15</code></td><td><code>10:43:49</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.4</code></td><td>gpt-41</td><td>initial</td><td><code>MedtronicGPT request failed after refresh (429): Too Many Requests (URL: https://api.gpt.medtronic.com/models/gpt-41) Response body: { &quot;statusCode&quot;: 429, &quot;message&quot;: &quot;Rate limit is exceeded. Try again in 1 seconds.&quot; }</code></td></tr>
       </tbody>
     </table>
   </div>
@@ -88,12 +88,46 @@
   </div>
 
   
-  <h2>Successful Runs <span class="pill">2</span></h2>
+  <h2>Successful Runs <span class="pill">9</span></h2>
   <div class="wrap">
     <table>
       <thead><tr><th>Date</th><th>Time</th><th>user</th><th>action</th><th>app_version</th><th>model</th><th>release</th><th>missing</th><th>draft_q</th><th>timings_s</th><th>total_s</th></tr></thead>
       <tbody>
-        <tr><td><code>2025-12-15</code></td><td><code>13:29:57</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.4</code></td><td>gpt-41</td><td>initial</td><td>36</td><td>5</td><td><code class="mono">build_completion_s=20.752
+        <tr><td><code>2025-12-15</code></td><td><code>14:51:39</code></td><td>Chey Wade</td><td>chat</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>0</td><td>3</td><td><code class="mono">chat_completion_s=18.658
+gather_inputs_s=0.000
+total_s=18.658</code></td><td>18.658</td></tr><tr><td><code>2025-12-15</code></td><td><code>14:50:14</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>37</td><td>3</td><td><code class="mono">build_completion_s=18.333
+design_refine_completion_s=18.129
+functional_requirements_enrichment_s=13.874
+gather_inputs_s=0.238
+planning_completion_s=16.320
+refine_completion_s=16.102
+total_s=82.996</code></td><td>82.996</td></tr><tr><td><code>2025-12-15</code></td><td><code>14:39:22</code></td><td>Chey Wade</td><td>chat</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>0</td><td>4</td><td><code class="mono">chat_completion_s=49.473
+gather_inputs_s=0.000
+total_s=49.473</code></td><td>49.473</td></tr><tr><td><code>2025-12-15</code></td><td><code>14:37:27</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>36</td><td>4</td><td><code class="mono">build_completion_s=25.755
+design_refine_completion_s=28.412
+functional_requirements_enrichment_s=16.129
+gather_inputs_s=0.246
+planning_completion_s=11.410
+refine_completion_s=65.462
+total_s=147.414</code></td><td>147.414</td></tr><tr><td><code>2025-12-15</code></td><td><code>14:28:55</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>36</td><td>3</td><td><code class="mono">build_completion_s=24.596
+design_refine_completion_s=19.927
+functional_requirements_enrichment_s=28.776
+gather_inputs_s=0.267
+planning_completion_s=14.888
+refine_completion_s=22.330
+total_s=110.784</code></td><td>110.784</td></tr><tr><td><code>2025-12-15</code></td><td><code>14:15:28</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>36</td><td>4</td><td><code class="mono">build_completion_s=28.565
+design_refine_completion_s=22.528
+functional_requirements_enrichment_s=16.756
+gather_inputs_s=13.606
+planning_completion_s=22.486
+refine_completion_s=23.281
+total_s=127.222</code></td><td>127.222</td></tr><tr><td><code>2025-12-15</code></td><td><code>13:41:00</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.5</code></td><td>gpt-41</td><td>initial</td><td>36</td><td>4</td><td><code class="mono">build_completion_s=23.330
+design_refine_completion_s=28.326
+functional_requirements_enrichment_s=13.423
+gather_inputs_s=51.306
+planning_completion_s=14.732
+refine_completion_s=21.278
+total_s=152.395</code></td><td>152.395</td></tr><tr><td><code>2025-12-15</code></td><td><code>13:29:57</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.4</code></td><td>gpt-41</td><td>initial</td><td>36</td><td>5</td><td><code class="mono">build_completion_s=20.752
 design_refine_completion_s=23.613
 functional_requirements_enrichment_s=5.995
 gather_inputs_s=0.373
