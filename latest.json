@@ -1,8 +1,8 @@
 { 
-    "version": "2025.1.6", 
-    "url": "\\\\hcwda30449e\\Validation-Tool\\validation-ui-2025.1.6.exe",
+    "version": "2025.1.7", 
+    "url": "\\\\hcwda30449e\\Validation-Tool\\validation-ui-2025.1.7.exe",
     "pbi_tools_url": "\\\\hcwda30449e\\Validation-Tool\\pbi-tools.exe",
-    "sha256": "eace3317d05d5547573a802a7a1d0d923ef0fef2b5ddee57f37d342d9c318eb3", 
+    "sha256": "016ecba6e23cef0653ef235474b82d9af96aeba692a58b40d845d1800e907b5a", 
     "pbi_tools_sha256": "199d9d2437c5fcaf8bbfd1fae3fa8c487def6a00c5c0e233416d7fa0dd1502a3",
-    "notes": "Push to server v6" 
+    "notes": "Push to server v7" 
 }
