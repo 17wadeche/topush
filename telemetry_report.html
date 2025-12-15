@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Validation Logs</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; padding: 18px; background:#f8fafc; color:#0f172a; }
+    h1 { margin: 0 0 6px; }
+    h2 { margin-top: 24px; }
+    .muted { color:#475569; }
+    .pill { display:inline-block; padding:3px 8px; border-radius:999px; background:#eef2ff; border:1px solid rgba(37,99,235,0.18); color:#334155; font-size:12px; }
+    .errpill { background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+    table {
+      width:100%;
+      border-collapse: collapse;
+      background:#fff;
+      border:1px solid rgba(15,23,42,0.12);
+      border-radius: 10px;
+      overflow:hidden;
+      table-layout: fixed; /* required for draggable column widths */
+    }
+    th, td {
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(15,23,42,0.08);
+      vertical-align: top;
+      font-size: 13px;
+      overflow: hidden;
+    }
+    th {
+      background:#f1f5f9;
+      font-size: 13px;
+      position: relative;
+      user-select: none;
+    }
+    th .th-inner {
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    th .resizer {
+      position:absolute;
+      right:0;
+      top:0;
+      width:8px;
+      height:100%;
+      cursor: col-resize;
+    }
+    th.resizing {
+      cursor: col-resize;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+    .mono { white-space: pre; }
+    .wrap { max-width: 100%; overflow-x:auto; }
+  </style>
+</head>
+<body>
+  <h1>Validation Logs</h1>
+  
+    <div class="muted" style="margin: 8px 0 14px;">
+      <div><strong>Exports (Excel):</strong>
+        <a href="telemetry_errors.xlsx">Errors</a> •
+        <a href="telemetry_feedback.xlsx">Feedback</a> •
+        <a href="telemetry_success.xlsx">Successful Runs</a>
+      </div>
+    </div>
+    
+  
+  <h2>Errors <span class="pill errpill">1</span></h2>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Time</th><th>user</th><th>action</th><th>app_version</th><th>model</th><th>release</th><th>error</th></tr></thead>
+      <tbody>
+        <tr><td><code>2025-12-15</code></td><td><code>10:43:49</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.4</code></td><td>gpt-41</td><td>initial</td><td><code>MedtronicGPT request failed after refresh (429): Too Many Requests (URL: https://api.gpt.medtronic.com/models/gpt-41) Response body: { &quot;statusCode&quot;: 429, &quot;message&quot;: &quot;Rate limit is exceeded. Try again in 1 seconds.&quot; }</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  
+  <h2>Feedback <span class="pill">1</span></h2>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Time</th><th>user</th><th>app_version</th><th>model</th><th>feedback_text</th><th>release</th></tr></thead>
+      <tbody>
+        <tr><td><code>2025-12-12</code></td><td><code>15:44:42</code></td><td>Chey Wade</td><td><code>2025.1.2</code></td><td>gpt-41</td><td>testing</td><td>initial</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  
+  <h2>Successful Runs <span class="pill">1</span></h2>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Time</th><th>user</th><th>action</th><th>app_version</th><th>model</th><th>release</th><th>missing</th><th>draft_q</th><th>timings_s</th><th>total_s</th></tr></thead>
+      <tbody>
+        <tr><td><code>2025-12-15</code></td><td><code>10:45:26</code></td><td>Chey Wade</td><td>build</td><td><code>2025.1.4</code></td><td>gpt-41</td><td>initial</td><td>32</td><td>4</td><td><code class="mono">build_completion_s=18.616
+design_refine_completion_s=17.872
+functional_requirements_enrichment_s=13.264
+gather_inputs_s=0.353
+planning_completion_s=13.202
+refine_completion_s=20.458
+total_s=83.765</code></td><td>83.765</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+  (function () {
+    function makeResizable(table) {
+      const ths = table.querySelectorAll("thead th");
+      ths.forEach((th) => {
+        if (!th.querySelector(".th-inner")) {
+          const wrap = document.createElement("div");
+          wrap.className = "th-inner";
+          while (th.firstChild) wrap.appendChild(th.firstChild);
+          th.appendChild(wrap);
+        }
+        const resizer = document.createElement("div");
+        resizer.className = "resizer";
+        th.appendChild(resizer);
+        let startX = 0;
+        let startW = 0;
+        resizer.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          startX = e.clientX;
+          startW = th.getBoundingClientRect().width;
+          th.classList.add("resizing");
+          const onMove = (ev) => {
+            const dx = ev.clientX - startX;
+            const w = Math.max(60, startW + dx);
+            th.style.width = w + "px";
+          };
+          const onUp = () => {
+            th.classList.remove("resizing");
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+          };
+          window.addEventListener("mousemove", onMove);
+          window.addEventListener("mouseup", onUp);
+        });
+      });
+    }
+    document.querySelectorAll("table").forEach(makeResizable);
+  })();
+  </script>
+</body>
+</html>
