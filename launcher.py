@@ -186,6 +186,7 @@ def main() -> None:
     app_dir.mkdir(parents=True, exist_ok=True)
     info = _fetch_latest_info() or {}
     latest_version = str(info.get("version", "")).strip()
+    _kill_all_validation_ui_processes()
     rt = _read_runtime(app_dir)
     if rt:
         host = rt.get("host", "127.0.0.1")
@@ -194,17 +195,9 @@ def main() -> None:
         running_url = f"http://{host}:{port}"
         ping = _http_get_json(running_url + "/ping")
         if ping and ping.get("ok") is True:
-            running_version = str(ping.get("version", "")).strip()            
-            if latest_version and running_version == latest_version:
-                _open_browser(running_url)
-                sys.exit(0)
-            if token:
-                _http_post(running_url + "/shutdown", token=token)
-                for _ in range(20):
-                    time.sleep(0.2)
-                    if not _http_get_json(running_url + "/ping"):
-                        break
-    _kill_all_validation_ui_processes()
+            time.sleep(1.0)
+            _kill_all_validation_ui_processes()
+            time.sleep(0.5)
     exe_path = ensure_latest(app_dir)
     ensure_pbi_tools(app_dir)
     if not exe_path.exists():
