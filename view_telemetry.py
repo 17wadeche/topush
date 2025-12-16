@@ -145,13 +145,15 @@ def split_events(
         e["timings_s"] = t_s
         e["timings_total_s"] = total_timings_s(t_s)
         e["timings_clean"] = format_timings_clean(t_s)
-        if et == "ui_feedback":
+        if et in ("ui_feedback", "feedback"):
             feedback.append(e)
-        elif et == "ui_run":
+        elif et in ("ui_run", "gpt_call", "run"):
             if ok:
                 success_runs.append(e)
             else:
                 errors.append(e)
+        elif not ok:
+            errors.append(e)
     return errors, feedback, success_runs
 def h(s: Any) -> str:
     s = "" if s is None else str(s)
