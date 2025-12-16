@@ -10,7 +10,7 @@ try:
     import openpyxl
     from openpyxl.utils import get_column_letter
 except Exception:
-    openpyxl = None  # allow HTML report even if openpyxl isn't available
+    openpyxl = None
     get_column_letter = None
 CENTRAL_TZ = ZoneInfo("America/Chicago")
 DEFAULT_TELEMETRY_DIR = r"\\hcwda30449e\Validation-Tool\logs"
@@ -45,7 +45,7 @@ SUCCESS_COLUMNS: List[Tuple[str, Callable[[Dict[str, Any]], Any]]] = [
     ("missing", lambda e: e.get("missing_placeholders_count", "")),
     ("draft_q", lambda e: e.get("draft_questions_count", "")),
     ("timings_s", lambda e: e.get("timings_clean", "")),
-    ("total_s", lambda e: e.get("timings_total_s", "")),  # <--- add this LAST
+    ("total_s", lambda e: e.get("timings_total_s", "")), 
 ]
 def ms_to_s(v: Any) -> Optional[float]:
     if v is None:
@@ -104,6 +104,14 @@ def read_jsonl(path: Path, max_lines: int = 5000) -> List[Dict[str, Any]]:
             events.append(json.loads(line))
         except Exception:
             continue
+    events.sort(key=lambda r: r.get("ts_utc", ""), reverse=True)
+    return events
+def read_jsonl_many(dir_path: Path, pattern: str = "telemetry*.jsonl", max_lines_per_file: int = 5000) -> List[Dict[str, Any]]:
+    events: List[Dict[str, Any]] = []
+    if not dir_path.exists():
+        return events
+    for p in sorted(dir_path.glob(pattern)):
+        events.extend(read_jsonl(p, max_lines=max_lines_per_file))
     events.sort(key=lambda r: r.get("ts_utc", ""), reverse=True)
     return events
 def total_timings_s(timings_s: Any) -> float:
@@ -322,7 +330,7 @@ def write_xlsx(path: Path, rows: List[Dict[str, Any]], columns: List[Tuple[str, 
         return
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = sheet[:31]  # Excel sheet name limit
+    ws.title = sheet[:31]
     headers = [name for name, _ in columns]
     ws.append(headers)
     for r in rows:
@@ -330,7 +338,7 @@ def write_xlsx(path: Path, rows: List[Dict[str, Any]], columns: List[Tuple[str, 
     ws.freeze_panes = "A2"
     for col_idx, header in enumerate(headers, start=1):
         max_len = len(str(header))
-        for row_idx in range(2, min(len(rows) + 2, 500)):  # cap scan for speed
+        for row_idx in range(2, min(len(rows) + 2, 500)):
             val = ws.cell(row=row_idx, column=col_idx).value
             if val is None:
                 continue
@@ -342,16 +350,15 @@ def write_xlsx(path: Path, rows: List[Dict[str, Any]], columns: List[Tuple[str, 
     wb.save(path)
 def main() -> None:
     dir_path = Path(os.environ.get("TELEMETRY_DIR", DEFAULT_TELEMETRY_DIR))
-    filename = os.environ.get("TELEMETRY_FILE", DEFAULT_TELEMETRY_FILE)
-    src = dir_path / filename
-    events = read_jsonl(src)
+    pattern = os.environ.get("TELEMETRY_GLOB", "telemetry*.jsonl")
+    events = read_jsonl_many(dir_path, pattern=pattern, max_lines_per_file=20000)
     errors, feedback, success_runs = split_events(events)
     out_dir = Path.cwd()
     write_xlsx(out_dir / "telemetry_errors.xlsx", errors, ERROR_COLUMNS, sheet="Errors")
     write_xlsx(out_dir / "telemetry_feedback.xlsx", feedback, FEEDBACK_COLUMNS, sheet="Feedback")
     write_xlsx(out_dir / "telemetry_success.xlsx", success_runs, SUCCESS_COLUMNS, sheet="Successful Runs")
     out = out_dir / "telemetry_report.html"
-    out.write_text(build_html(errors, feedback, success_runs, src), encoding="utf-8")
+    out.write_text(build_html(errors, feedback, success_runs, dir_path), encoding="utf-8")
     webbrowser.open(out.as_uri())
     print(f"Wrote: {out}")
 if __name__ == "__main__":
