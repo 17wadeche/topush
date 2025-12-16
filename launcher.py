@@ -1,4 +1,3 @@
-# launcher.py
 from __future__ import annotations
 import json
 import hashlib
@@ -12,7 +11,7 @@ import time
 from pathlib import Path
 APP_DIR_NAME = "MedtronicValidationTool"
 LATEST_URL = r"\\hcwda30449e\Validation-Tool\latest.json"
-APP_EXE_BASENAME = "validation-ui.exe"  # what we call it locally
+APP_EXE_BASENAME = "validation-ui.exe"
 PBI_TOOLS_BASENAME = "pbi-tools.exe"
 def _get_app_dir() -> Path:
     base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or str(Path.home())
@@ -60,7 +59,7 @@ def _write_local_version(app_dir: Path, version: str) -> None:
 def _download(path_str: str) -> Path:
     src = Path(path_str)
     tmp_dir = Path(tempfile.mkdtemp(prefix="validation_update_"))
-    target = tmp_dir / src.name  # keep original filename
+    target = tmp_dir / src.name
     target.write_bytes(src.read_bytes())
     return target
 def _sha256(path: Path) -> str:
@@ -106,6 +105,20 @@ def _kill_pid_windows(pid: int) -> bool:
         return r.returncode == 0
     except Exception:
         return False
+def _kill_all_validation_ui_processes() -> None:
+    if os.name != "nt":
+        return
+    try:
+        subprocess.run(
+            ["powershell", "-NoProfile", "-Command", 
+             "Stop-Process -Name 'validation-ui' -Force -ErrorAction SilentlyContinue"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=5.0,
+        )
+        time.sleep(0.5)
+    except Exception:
+        pass
 def _version_newer(v1: str, v2: str) -> bool:
     def parse(v: str):
         return [int(p) for p in v.split(".") if p.isdigit()]
@@ -113,7 +126,7 @@ def _version_newer(v1: str, v2: str) -> bool:
 def ensure_latest(app_dir: Path) -> Path:
     app_dir.mkdir(parents=True, exist_ok=True)
     info = _fetch_latest_info()
-    target = app_dir / APP_EXE_BASENAME  # ALWAYS run this
+    target = app_dir / APP_EXE_BASENAME
     if not info or "version" not in info or "url" not in info:
         return target
     remote_version = str(info["version"]).strip()
@@ -130,11 +143,13 @@ def ensure_latest(app_dir: Path) -> Path:
     try:
         tmp = app_dir / (APP_EXE_BASENAME + ".new")
         tmp.write_bytes(downloaded.read_bytes())
-        os.replace(tmp, target)  # atomic replace
+        os.replace(tmp, target)
         _write_local_version(app_dir, remote_version)
         for p in app_dir.glob("validation-ui-*.exe"):
-            try: p.unlink()
-            except Exception: pass
+            try: 
+                p.unlink()
+            except Exception: 
+                pass
     except Exception:
         return target
     return target
@@ -144,13 +159,13 @@ def _get_local_current_exe(app_dir: Path) -> Path:
 def ensure_pbi_tools(app_dir: Path) -> None:
     target = app_dir / PBI_TOOLS_BASENAME
     if target.exists():
-        return  # already there
+        return
     info = _fetch_latest_info()
     if not info:
         return
     url = str(info.get("pbi_tools_url", "")).strip()
     if not url:
-        return  # not configured
+        return
     try:
         downloaded = _download(url)
     except Exception:
@@ -179,7 +194,7 @@ def main() -> None:
         running_url = f"http://{host}:{port}"
         ping = _http_get_json(running_url + "/ping")
         if ping and ping.get("ok") is True:
-            running_version = str(ping.get("version", "")).strip()
+            running_version = str(ping.get("version", "")).strip()            
             if latest_version and running_version == latest_version:
                 _open_browser(running_url)
                 sys.exit(0)
@@ -189,24 +204,7 @@ def main() -> None:
                     time.sleep(0.2)
                     if not _http_get_json(running_url + "/ping"):
                         break
-                if _http_get_json(running_url + "/ping"):
-                    pid = int(rt.get("pid") or 0)
-                    killed = False
-                    if pid and os.name == "nt" and _pid_looks_like_our_ui(pid, app_dir):
-                        killed = _kill_pid_windows(pid)
-                        if killed:
-                            for _ in range(25):
-                                time.sleep(0.2)
-                                if not _http_get_json(running_url + "/ping"):
-                                    break
-                    if _http_get_json(running_url + "/ping"):
-                        import tkinter.messagebox as mbox
-                        mbox.showerror(
-                            "Medtronic Validation Tool",
-                            "A previous version is still running and could not be closed automatically.\n\n"
-                            "Please close the existing Validation Tool window and try again."
-                        )
-                        sys.exit(1)
+    _kill_all_validation_ui_processes()
     exe_path = ensure_latest(app_dir)
     ensure_pbi_tools(app_dir)
     if not exe_path.exists():
