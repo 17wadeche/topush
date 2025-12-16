@@ -10,7 +10,7 @@ echo Source: %SOURCE_PATH%
 echo Destination: %REMOTE_SERVER_PATH%
 echo.
 robocopy "%SOURCE_PATH%" "%REMOTE_SERVER_PATH%" /E /PURGE /R:3 /W:5 /XJ ^
-/XF "*.tmp" "*.bat" "*~" "~*" ".gitignore" "Readme.md" "launcher.spec" "launcher.py" "validation-ui.spec" ^
+/XF "*.tmp" "*.bat" "*~" "~*" ".gitignore" "Readme.md" "launcher.spec" "launcher.py" "validation-ui.spec" "ValidationLauncherSetup.exe" ^
 /XD ".venv" "__pycache__" ".vscode" "logs" ".git" ".github" "build" "dist" "installer" "packaging" "venv"
 if %errorlevel% leq 8 (
     echo.

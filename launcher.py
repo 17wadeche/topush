@@ -13,6 +13,7 @@ APP_DIR_NAME = "MedtronicValidationTool"
 LATEST_URL = r"\\hcwda30449e\Validation-Tool\latest.json"
 APP_EXE_BASENAME = "validation-ui.exe"
 PBI_TOOLS_BASENAME = "pbi-tools.exe"
+LAUNCHER_EXE_BASENAME = "ValidationLauncher.exe"
 def _get_app_dir() -> Path:
     base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or str(Path.home())
     return Path(base) / APP_DIR_NAME
@@ -74,37 +75,6 @@ def _fetch_latest_info() -> dict | None:
         return json.loads(raw)
     except Exception:
         return None
-def _pid_exe_path_windows(pid: int) -> str | None:
-    try:
-        cmd = [
-            "powershell", "-NoProfile", "-Command",
-            f"(Get-CimInstance Win32_Process -Filter \"ProcessId={pid}\").ExecutablePath"
-        ]
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=2.0)
-        path = (r.stdout or "").strip()
-        return path or None
-    except Exception:
-        return None
-def _pid_looks_like_our_ui(pid: int, app_dir: Path) -> bool:
-    if os.name != "nt" or pid <= 0:
-        return False
-    exe = _pid_exe_path_windows(pid)
-    if not exe:
-        return False
-    exe_l = exe.lower().replace("/", "\\")
-    app_l = str(app_dir).lower().replace("/", "\\")
-    return exe_l.startswith(app_l) and exe_l.endswith("\\validation-ui.exe")
-def _kill_pid_windows(pid: int) -> bool:
-    try:
-        r = subprocess.run(
-            ["taskkill", "/PID", str(pid), "/T", "/F"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=5.0,
-        )
-        return r.returncode == 0
-    except Exception:
-        return False
 def _kill_all_validation_ui_processes() -> None:
     if os.name != "nt":
         return
@@ -119,10 +89,6 @@ def _kill_all_validation_ui_processes() -> None:
         time.sleep(0.5)
     except Exception:
         pass
-def _version_newer(v1: str, v2: str) -> bool:
-    def parse(v: str):
-        return [int(p) for p in v.split(".") if p.isdigit()]
-    return parse(v1) > parse(v2)
 def ensure_latest(app_dir: Path) -> Path:
     app_dir.mkdir(parents=True, exist_ok=True)
     info = _fetch_latest_info()
@@ -153,9 +119,6 @@ def ensure_latest(app_dir: Path) -> Path:
     except Exception:
         return target
     return target
-def _get_local_current_exe(app_dir: Path) -> Path:
-    candidates = sorted(app_dir.glob("validation-ui-*.exe"))
-    return candidates[-1] if candidates else (app_dir / "validation-ui.exe")
 def ensure_pbi_tools(app_dir: Path) -> None:
     target = app_dir / PBI_TOOLS_BASENAME
     if target.exists():
@@ -181,9 +144,52 @@ def ensure_pbi_tools(app_dir: Path) -> None:
         target.write_bytes(downloaded.read_bytes())
     except Exception:
         return
+def ensure_launcher_updated(app_dir: Path) -> bool:
+    info = _fetch_latest_info()
+    if not info:
+        return False
+    launcher_url = str(info.get("launcher_url", "")).strip()
+    if not launcher_url:
+        return False
+    launcher_sha = str(info.get("launcher_sha256", "")).strip().lower()
+    if not launcher_sha:
+        return False
+    current_launcher = Path(sys.executable)
+    if not current_launcher.exists():
+        return False
+    current_sha = _sha256(current_launcher).lower()
+    if current_sha == launcher_sha:
+        return False
+    try:
+        downloaded = _download(launcher_url)
+    except Exception:
+        return False
+    if _sha256(downloaded).lower() != launcher_sha:
+        return False
+    target = app_dir / LAUNCHER_EXE_BASENAME
+    batch_path = app_dir / "update_launcher.bat"
+    try:
+        target.write_bytes(downloaded.read_bytes())
+        batch_content = f"""@echo off
+timeout /t 1 /nobreak >nul
+copy /y "{target}" "{current_launcher}"
+del "{target}"
+del "%~f0"
+start "" "{current_launcher}"
+"""
+        batch_path.write_text(batch_content, encoding="utf-8")
+        subprocess.Popen(
+            ["cmd", "/c", str(batch_path)],
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        return True
+    except Exception:
+        return False
 def main() -> None:
     app_dir = _get_app_dir()
     app_dir.mkdir(parents=True, exist_ok=True)
+    if ensure_launcher_updated(app_dir):
+        sys.exit(0)
     info = _fetch_latest_info() or {}
     latest_version = str(info.get("version", "")).strip()
     _kill_all_validation_ui_processes()
